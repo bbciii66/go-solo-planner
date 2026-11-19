@@ -150,7 +150,8 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
       <button class="btn small ghost" id="btn-export" type="button">Save a copy</button>
       <label class="btn small ghost" for="file-import" style="display:inline-flex;align-items:center">Load a copy</label>
       <input type="file" id="file-import" accept="application/json" hidden>
-      <button class="btn small ghost" id="btn-reset" type="button">Start over</button>
+      <button class="btn small ghost" id="btn-home" type="button">Start page</button>
+      <button class="btn small ghost" id="btn-reset" type="button" title="Erases your answers from this browser">Clear my plan</button>
     </div>
   </header>
 
@@ -158,6 +159,11 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   <section class="panel" id="welcome" hidden>
     <h2>Where do you want to start?</h2>
     <div class="welcome">
+      <div class="choice" id="continue-card" hidden>
+        <h3 id="continue-title">Pick up where you left off</h3>
+        <p class="sub" id="continue-sub">Your answers are saved in this browser.</p>
+        <button class="btn primary" type="button" id="continue-btn">Continue</button>
+      </div>
       <div class="choice featured">
         <h3>See it with Sam first</h3>
         <p class="sub">Sam is a made-up operations manager on $95k. Play with his rate, runway and plan to see what the tool does, then start your own.</p>
@@ -322,7 +328,7 @@ function sanitize(d){
     else if(typeof b==="string") out[k]=String(v==null?"":v).slice(0,300);
     else out[k]=(v==null||v===""||!isFinite(+v))?b:Math.max(0,+v);
   }
-  if(!("sample" in d) && out.name==="Sam" && out.role===SAMPLE.role) out.sample=true; // plans saved before the sample flag existed
+  if(out.name==="Sam" && out.role===SAMPLE.role && out.service===SAMPLE.service) out.sample=true; // Sam saved by an earlier build
   out.rate=Math.min(400,Math.max(25,n(out.rate)||100)); out.hpw=Math.min(60,Math.max(5,n(out.hpw)||30));
   return out;
 }
@@ -576,19 +582,35 @@ document.addEventListener("click",e=>{
     else if(r>0){ const want=Math.ceil(r/5)*5; S.rate=Math.min(400,Math.max(25,want)); render(); if(want>400) toast(`That needs about ${usd(r)}/hr, above this slider's $400 top.`); }
     else toast("Add your salary in step 1 first."); }
 });
-$("start-blank").onclick=()=>{ S=clone(BLANK); S.started=true; begin(); };
-$("start-sample").onclick=()=>{ S=clone(SAMPLE); S.quit=sampleQuit(); begin(1); };
-function leaveSample(){ S=clone(BLANK); save(); $("flow").hidden=true; $("welcome").hidden=false; window.scrollTo({top:0,behavior:"smooth"}); }
+// Your own plan is kept aside while you look at Sam, so trying the sample never erases it.
+const OWN="goSoloPlanner-own";
+function stashOwn(){ try{ if(S.started&&!S.sample) localStorage.setItem(OWN,JSON.stringify(S)); }catch(e){} }
+function takeOwn(){ try{ const o=JSON.parse(localStorage.getItem(OWN)||"null"); localStorage.removeItem(OWN); return o?sanitize(o):null; }catch(e){ return null; } }
+function peekOwn(){ try{ return !!localStorage.getItem(OWN); }catch(e){ return false; } }
+function showWelcome(){
+  $("flow").hidden=true; $("welcome").hidden=false;
+  const own=S.started&&!S.sample, stashed=S.sample&&peekOwn();
+  $("continue-card").hidden=!(own||stashed);
+  $("continue-title").textContent="Continue my plan";
+  $("continue-sub").textContent=own?`You're on step ${S.step+1} of 5. Your answers are saved in this browser.`:"Your own plan is saved in this browser.";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("continue-btn").onclick=()=>{ if(S.sample){ const o=takeOwn(); if(o) S=o; } begin(S.step); };
+$("btn-home").onclick=()=>{ if(!S.started) return; save(); showWelcome(); };
+$("start-blank").onclick=()=>{ const hasOwn=(S.started&&!S.sample)||peekOwn(); if(hasOwn&&!$("start-blank").dataset.armed){ const b=$("start-blank"); b.dataset.armed="1"; b.textContent="Tap again to replace your saved plan"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start blank"; },4000); return; }
+  takeOwn(); S=clone(BLANK); S.started=true; begin(0); };
+$("start-sample").onclick=()=>{ stashOwn(); S=clone(SAMPLE); S.quit=sampleQuit(); begin(1); };
+function leaveSample(){ const own=takeOwn(); if(own){ S=own; begin(S.step); toast("Back to your own plan."); } else { S=clone(BLANK); save(); showWelcome(); } }
 document.addEventListener("click",e=>{ if(e.target.closest("[data-sample-home]")) leaveSample(); });
-$("sample-exit").onclick=()=>{ S=clone(BLANK); S.started=true; begin(0); toast("Fresh plan started. Sam's numbers are cleared."); };
-$("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to clear everything"; toast("This clears your whole plan. Save a copy first if you want to keep it."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start over"; },4000); return; } delete b.dataset.armed; b.textContent="Start over"; S=clone(BLANK); save(); $("flow").hidden=true; $("welcome").hidden=false; };
+$("sample-exit").onclick=()=>{ const own=takeOwn(); if(own){ S=own; begin(S.step); toast("Back to your own plan."); } else { S=clone(BLANK); S.started=true; begin(0); toast("Your own plan starts here. Sam's numbers are cleared."); } };
+$("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to erase"; toast("This erases all your answers from this browser and goes back to the start page. Save a copy first to keep them."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Clear my plan"; },4000); return; } delete b.dataset.armed; b.textContent="Clear my plan"; try{ localStorage.removeItem(OWN); }catch(e){} S=clone(BLANK); save(); showWelcome(); toast("Cleared. Nothing is saved now."); };
 $("btn-copy-ai").onclick=copyAI;
 $("btn-show-ai").onclick=()=>{ const p=$("ai-preview"); p.hidden=!p.hidden; p.textContent=aiPrompt(); };
 $("btn-print").onclick=()=>window.print();
 $("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="go-solo-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
 $("file-import").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); S=sanitize(d); S.started=true; begin(S.step||0); toast("Plan loaded."); }catch(err){ toast("That file isn't a saved plan."); } e.target.value=""; };
 function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; $("samplebar").hidden=!S.sample; document.querySelectorAll("[data-sample-home]").forEach(b=>b.hidden=!S.sample); fillInputs(); showStep(step||0); }
-if(S.started) begin(S.step); else $("welcome").hidden=false;
+if(S.started) begin(S.step); else showWelcome();
 window.__planner={w2,consult,solveRevenue,rateFor,runway,billHours,get S(){return S;},set S(v){S=v;}};
 </script>
 </body>
