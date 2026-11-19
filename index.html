@@ -143,7 +143,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   <header class="top">
     <div>
       <div class="eyebrow">Go Solo Planner</div>
-      <h1 id="title">Plan your move from W-2 to consulting</h1>
+      <h1 id="title">Plan your move from W-2 to Self-Employed</h1>
       <p class="sub">Five short steps: the basics, your rate, your runway, a dated plan and the questions to ask. Everything stays in this browser.</p>
     </div>
     <div class="toolbar noprint">
@@ -322,6 +322,7 @@ function sanitize(d){
     else if(typeof b==="string") out[k]=String(v==null?"":v).slice(0,300);
     else out[k]=(v==null||v===""||!isFinite(+v))?b:Math.max(0,+v);
   }
+  if(!("sample" in d) && out.name==="Sam" && out.role===SAMPLE.role) out.sample=true; // plans saved before the sample flag existed
   out.rate=Math.min(400,Math.max(25,n(out.rate)||100)); out.hpw=Math.min(60,Math.max(5,n(out.hpw)||30));
   return out;
 }
