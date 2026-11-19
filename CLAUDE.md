@@ -7,7 +7,8 @@ Public, single-file app (`index.html`, vanilla JS, no build). It's the generic v
 - Independent review: a separate Claude reviewer agent so far. Codex or Claude-in-agy are fine for future reviews.
 
 ## Git
-- Push policy: push automatically (Ben, 2026-11-19). Work on a branch, open draft PRs, never force-push, and don't merge to main without Ben's OK.
+- Push policy: push automatically (Ben, 2026-11-19). Work on a branch, open draft PRs, never force-push.
+- Merge policy (Ben, 2026-11-19): when a PR is tested (and independently reviewed if significant), Claude asks Ben in the thread; on his yes, Claude marks it ready, squash-merges and confirms the live Pages site. Don't hand Ben merge steps.
 
 ## Privacy (public repo)
 - Never add real people's names, pay, employers, documents or state-specific defaults taken from the private calculator. Run a name and employer sweep before every push.
