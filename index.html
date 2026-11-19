@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Go Solo Planner</title>
+<meta name="description" content="A guided walkthrough for leaving a W-2 job to start consulting: basics, a rate calculator, runway, a dated plan and questions for your CPA and attorney. Runs entirely in your browser.">
+<meta name="theme-color" content="#2f4a6b">
+<style>
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --ink:#1b2330; --muted:#5b6575; --line:#d9dde4;
+  --accent:#b8681a; --accent-soft:#f6e7d6; --steel:#2f4a6b; --steel-soft:#e3e9f1;
+  --good:#2f7a4b; --good-soft:#e1f1e6; --bad:#a23b2f; --bad-soft:#f6e1de; --gold:#c99a1e;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12161c; --panel:#1a2029; --ink:#e7ebf0; --muted:#9aa4b2; --line:#2c3440;
+  --accent:#e09a52; --accent-soft:#3a2a1a; --steel:#8fb0d6; --steel-soft:#1f2b3a;
+  --good:#6cc28f; --good-soft:#18301f; --bad:#e58a7e; --bad-soft:#3a1f1b; --gold:#e7c25a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#12161c; --panel:#1a2029; --ink:#e7ebf0; --muted:#9aa4b2; --line:#2c3440;
+  --accent:#e09a52; --accent-soft:#3a2a1a; --steel:#8fb0d6; --steel-soft:#1f2b3a;
+  --good:#6cc28f; --good-soft:#18301f; --bad:#e58a7e; --bad-soft:#3a1f1b; --gold:#e7c25a; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:clamp(26px,4.5vw,38px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:800}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sub{color:var(--muted);max-width:68ch}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+a{color:var(--steel)}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 14px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:9px;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--steel);border-color:var(--steel);color:var(--panel)}
+.btn.ghost{background:transparent}
+.btn.small{font-size:13px;padding:6px 10px;min-height:34px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* stepper */
+.stepper{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.stepper button{font:600 12.5px var(--body);text-align:left;border:0;border-top:4px solid var(--line);background:transparent;color:var(--muted);padding:8px 2px 0;cursor:pointer;min-height:44px}
+.stepper button .n{font-family:var(--mono);font-size:11px;display:block}
+.stepper button[aria-current="step"]{border-color:var(--accent);color:var(--ink)}
+.stepper button.done{border-color:var(--steel);color:var(--ink)}
+@media (max-width:560px){.stepper button .l{display:none}.stepper button{text-align:center}}
+.xp{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.xp .track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.xp .fill{height:100%;background:linear-gradient(90deg,var(--steel),var(--accent));width:0}
+/* panels */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 16px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;font-weight:600}
+.field small{color:var(--muted);font-size:12px;line-height:1.35}
+input[type=text],input[type=number],input[type=date],select,textarea{font:500 15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+textarea{min-height:80px;resize:vertical;font-size:14px}
+.nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hint{background:var(--steel-soft);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.warn{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.disclaimer{font-size:12.5px;color:var(--muted);max-width:80ch}
+/* calculator */
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.slider label{display:flex;justify-content:space-between;font-weight:600;font-size:14px}
+.slider label .num{font-size:20px;color:var(--accent);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent);height:32px}
+.meter{position:relative;height:30px;background:var(--line);border-radius:99px;overflow:visible;margin:28px 0 30px}
+.meter .fill{position:absolute;inset:0 auto 0 0;border-radius:99px;background:linear-gradient(90deg,var(--bad),var(--accent) 45%,var(--good));width:0}
+.meter .mark{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink)}
+.meter .mark span{position:absolute;top:-22px;transform:translateX(-50%);font:600 11px var(--mono);white-space:nowrap;color:var(--muted)}
+.meter .mark.hit span{color:var(--ink)}
+.meter .mark b{position:absolute;bottom:-22px;transform:translateX(-50%);font:500 11px var(--mono);white-space:nowrap;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.meter .fill,.xp .fill{transition:width .3s ease}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.kpi{display:flex;flex-direction:column;gap:2px}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .v{font-family:var(--display);font-weight:800;font-size:clamp(24px,4vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v.hero{color:var(--accent)}
+.kpi .d{font-size:12.5px;color:var(--muted)}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{font:600 12.5px var(--body);padding:6px 11px;border-radius:99px;border:1px dashed var(--line);color:var(--muted)}
+.badge.on{border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.badge.pop{animation:pop .5s ease}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.15)}100%{transform:scale(1)}}
+.quick{display:flex;gap:8px;flex-wrap:wrap}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px;display:flex;align-items:center}
+details .fields{margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+.tablewrap{overflow-x:auto}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td:first-child{font-family:var(--body)}
+tr.grand td{font-weight:700;background:var(--steel-soft)}
+/* runway */
+.runbar{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--line)}
+.runbar span{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+/* plan */
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.plan li{display:grid;grid-template-columns:28px 110px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+.plan li .when{font:500 12.5px var(--mono);color:var(--muted)}
+.plan li.late .when{color:var(--bad)}
+.plan li input{width:20px;height:20px;margin-top:2px;accent-color:var(--good)}
+.plan li.checked .what{color:var(--muted);text-decoration:line-through}
+.plan li .why{display:block;font-size:12.5px;color:var(--muted);text-decoration:none}
+@media (max-width:520px){.plan li{grid-template-columns:28px minmax(0,1fr);row-gap:2px}.plan li .when,.plan li .what{grid-column:2}}
+.qgroup{display:flex;flex-direction:column;gap:8px}
+.qgroup ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.copybox{font:13px/1.45 var(--mono);white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:320px;overflow:auto}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:calc(100vw - 32px)}
+.welcome{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.choice{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.printonly{display:none}
+@media print{
+  body{background:#fff;color:#111;padding:10mm;font-size:12px}
+  .noprint,.stepper,.xp,.nav,.toolbar,input[type=range]{display:none!important}
+  .printonly{display:block}
+  section[data-step]{display:flex!important;break-inside:avoid-page}
+  .panel{border-color:#ccc;break-inside:avoid}
+  :root{--bg:#fff;--panel:#fff;--ink:#111;--muted:#555;--line:#ccc;color-scheme:light}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Go Solo Planner</div>
+      <h1 id="title">Plan your move from W-2 to consulting</h1>
+      <p class="sub">Five short steps: the basics, your rate, your runway, a dated plan and the questions to ask. Everything stays in this browser.</p>
+    </div>
+    <div class="toolbar noprint">
+      <button class="btn small ghost" id="btn-export" type="button">Save a copy</button>
+      <label class="btn small ghost" for="file-import" style="display:inline-flex;align-items:center">Load a copy</label>
+      <input type="file" id="file-import" accept="application/json" hidden>
+      <button class="btn small ghost" id="btn-reset" type="button">Start over</button>
+    </div>
+  </header>
+
+  <!-- welcome -->
+  <section class="panel" id="welcome" hidden>
+    <h2>Where do you want to start?</h2>
+    <div class="welcome">
+      <div class="choice">
+        <h3>Start blank</h3>
+        <p class="sub">Type in your own numbers as you go. Have a recent pay stub handy.</p>
+        <button class="btn primary" type="button" id="start-blank">Start my plan</button>
+      </div>
+      <div class="choice">
+        <h3>Try the sample person</h3>
+        <p class="sub">Explore with a made-up person, Sam, an operations manager on $95k. You can change anything.</p>
+        <button class="btn" type="button" id="start-sample">Load the sample</button>
+      </div>
+    </div>
+    <p class="disclaimer">This is a planning tool, not tax, legal or financial advice. It uses 2026 federal tax rules for a single filer, plus a simple flat rate for your state. Have a CPA check your numbers before you decide.</p>
+  </section>
+
+  <div id="flow" hidden>
+    <nav class="stepper noprint" id="stepper" aria-label="Steps"></nav>
+    <div class="xp noprint" style="margin-top:10px"><span id="xp-label">0% ready</span><div class="track"><div class="fill" id="xp-fill"></div></div></div>
+
+    <!-- 1 basics -->
+    <section class="panel" data-step="0" style="margin-top:18px">
+      <div><div class="eyebrow">Step 1 · The basics</div><h2>Who, what and when</h2></div>
+      <div class="fields">
+        <div class="field"><label for="f-name">Your first name</label><input type="text" id="f-name" data-k="name" autocomplete="given-name"><small>Optional. Used to personalize your report.</small></div>
+        <div class="field"><label for="f-role">Your job today</label><input type="text" id="f-role" data-k="role" placeholder="e.g. Operations manager"></div>
+        <div class="field"><label for="f-years">Years of experience</label><input type="number" id="f-years" data-k="years" min="0" step="1"></div>
+        <div class="field"><label for="f-age">Your age</label><input type="number" id="f-age" data-k="age" min="18" max="90" step="1"><small>Sets your retirement contribution limits.</small></div>
+        <div class="field"><label for="f-service">What you'd sell</label><input type="text" id="f-service" data-k="service" placeholder="e.g. Process improvement for mid-size distributors"></div>
+        <div class="field"><label for="f-clients">Who you'd sell it to</label><input type="text" id="f-clients" data-k="clients" placeholder="e.g. Regional distributors, 50-500 staff"></div>
+        <div class="field"><label for="f-quit">Target last day at your job</label><input type="date" id="f-quit" data-k="quit"></div>
+        <div class="field"><label for="f-state">Your state</label><input type="text" id="f-state" data-k="state" placeholder="e.g. Ohio"></div>
+      </div>
+      <h3>Your paycheck today</h3>
+      <div class="fields">
+        <div class="field"><label for="f-salary">Base salary ($/yr)</label><input type="number" id="f-salary" data-k="salary" step="1000" min="0"><small>Hourly? Multiply by 2,080.</small></div>
+        <div class="field"><label for="f-bonus">Bonus ($/yr)</label><input type="number" id="f-bonus" data-k="bonus" step="500" min="0"></div>
+        <div class="field"><label for="f-defer">Your 401(k) contribution (% of pay)</label><input type="number" id="f-defer" data-k="deferPct" step="1" min="0" max="100"></div>
+        <div class="field"><label for="f-match">Employer match (% of pay)</label><input type="number" id="f-match" data-k="matchPct" step="0.5" min="0" max="25"></div>
+        <div class="field"><label for="f-prem">Your health, dental and vision premiums ($/month)</label><input type="number" id="f-prem" data-k="curPrem" step="10" min="0"><small>Your share, from your pay stub.</small></div>
+        <div class="field"><label for="f-strate">State income tax rate (%)</label><input type="number" id="f-strate" data-k="stRate" step="0.1" min="0" max="15"><small>Use 0 for states with no income tax. A flat estimate is fine.</small></div>
+      </div>
+      <div class="nav"><span></span><button class="btn primary" type="button" data-go="1">Next: find my rate</button></div>
+    </section>
+
+    <!-- 2 calculator -->
+    <section class="panel" data-step="1" style="margin-top:18px">
+      <div><div class="eyebrow">Step 2 · The game</div><h2>Find your rate</h2>
+      <p class="sub">Move the sliders. Fill the bar past your take-home today, then see how far past it you can go.</p></div>
+      <div class="sliders">
+        <div class="slider"><label for="r-rate">Hourly rate <span class="num" id="v-rate"></span></label><input type="range" id="r-rate" data-k="rate" min="25" max="400" step="5"></div>
+        <div class="slider"><label for="r-hpw">Billable hours per week <span class="num" id="v-hpw"></span></label><input type="range" id="r-hpw" data-k="hpw" min="5" max="60" step="1"></div>
+      </div>
+      <div class="meter" id="meter" role="img" aria-label="Take-home progress"><div class="fill" id="meter-fill"></div></div>
+      <div class="kpis">
+        <div class="kpi"><span class="l">Take-home vs. today</span><span class="v hero" id="k-diff"></span><span class="d" id="k-diffd"></span></div>
+        <div class="kpi"><span class="l">Yearly revenue</span><span class="v" id="k-rev"></span><span class="d" id="k-revd"></span></div>
+        <div class="kpi"><span class="l">Break-even rate</span><span class="v" id="k-be"></span><span class="d" id="k-bed"></span></div>
+      </div>
+      <div class="badges" id="badges" aria-live="polite"></div>
+      <div class="quick">
+        <button class="btn small" type="button" data-jump="0">Jump to break-even</button>
+        <button class="btn small" type="button" data-jump="15">Jump to +15%</button>
+        <button class="btn small" type="button" data-jump="30">Jump to +30%</button>
+      </div>
+      <div id="calc-warns"></div>
+      <details><summary>Where the money goes</summary>
+        <div class="tablewrap"><table id="ledger"><thead><tr><th></th><th>Job today</th><th>Consulting</th></tr></thead><tbody></tbody></table></div>
+      </details>
+      <details><summary>Costs and time off (change these to match your life)</summary>
+        <div class="fields">
+          <div class="field"><label for="c-health">Health insurance you'd buy ($/month)</label><input type="number" id="c-health" data-k="health" step="25" min="0"><small>Check healthcare.gov or your state marketplace for a real quote.</small></div>
+          <div class="field"><label for="c-ins">Dental, vision, disability, life ($/month)</label><input type="number" id="c-ins" data-k="otherIns" step="10" min="0"></div>
+          <div class="field"><label for="c-oop">Extra deductible / out-of-pocket ($/yr)</label><input type="number" id="c-oop" data-k="oop" step="100" min="0"></div>
+          <div class="field"><label for="c-oh">Business overhead ($/yr)</label><input type="number" id="c-oh" data-k="overhead" step="250" min="0"><small>Laptop, phone, software, liability insurance, accountant, LLC fees, website. $8-12k is typical.</small></div>
+          <div class="field"><label for="c-off">Days off per year</label><input type="number" id="c-off" data-k="daysOff" step="1" min="0" max="200"><small>Holidays + vacation + sick days. Nobody pays you for these now.</small></div>
+          <div class="field"><label for="c-ret">Retirement you'd save ($/yr)</label><input type="number" id="c-ret" data-k="retire" step="500" min="0"><small>Blank = match what you and your employer save today.</small></div>
+          <div class="field"><label for="c-std">State standard deduction ($)</label><input type="number" id="c-std" data-k="stStd" step="500" min="0"><small>Rough is fine. 0 if unsure.</small></div>
+        </div>
+      </details>
+      <div class="nav"><button class="btn" type="button" data-go="0">Back</button><button class="btn primary" type="button" data-go="2">Next: what's next</button></div>
+    </section>
+
+    <!-- 3 what's next -->
+    <section class="panel" data-step="2" style="margin-top:18px">
+      <div><div class="eyebrow">Step 3 · What's next</div><h2>Can you make the jump?</h2>
+      <p class="sub">The rate tells you if the business works. Runway tells you if you can get it started. Most new consultants wait 1-3 months for their first payment.</p></div>
+      <div class="fields">
+        <div class="field"><label for="w-sav">Savings you can use ($)</label><input type="number" id="w-sav" data-k="savings" step="1000" min="0"><small>Not retirement accounts.</small></div>
+        <div class="field"><label for="w-exp">Household spending ($/month)</label><input type="number" id="w-exp" data-k="expenses" step="100" min="0"><small>Rent or mortgage, food, car, everything except health insurance.</small></div>
+        <div class="field"><label for="w-gap">Weeks from your last day to first client work</label><input type="number" id="w-gap" data-k="gapWeeks" step="1" min="0" max="52"></div>
+        <div class="field"><label for="w-terms">Client pays you</label><select id="w-terms" data-k="terms"><option value="0">On receipt</option><option value="15">Net 15</option><option value="30">Net 30</option><option value="45">Net 45</option><option value="60">Net 60</option><option value="90">Net 90</option></select><small>Days after you invoice. Ask your first client.</small></div>
+        <div class="field"><label for="w-start">One-time startup costs ($)</label><input type="number" id="w-start" data-k="startup" step="250" min="0"><small>LLC filing, insurance deposits, equipment, website.</small></div>
+        <div class="field"><label for="w-buf">Safety buffer (months)</label><input type="number" id="w-buf" data-k="buffer" step="1" min="0" max="12"><small>For a slow month or a lost client.</small></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span class="l">Months before first payment</span><span class="v" id="k-wait"></span><span class="d" id="k-waitd"></span></div>
+        <div class="kpi"><span class="l">Cash you need on your last day</span><span class="v" id="k-need"></span><span class="d" id="k-needd"></span></div>
+        <div class="kpi"><span class="l">You have</span><span class="v hero" id="k-have"></span><span class="d" id="k-haved"></span></div>
+      </div>
+      <div class="runbar" id="runbar"></div>
+      <div class="legend" id="runlegend"></div>
+      <div class="hint" id="taxhint"></div>
+      <div id="run-warns"></div>
+      <div class="nav"><button class="btn" type="button" data-go="1">Back</button><button class="btn primary" type="button" data-go="3">Next: build my plan</button></div>
+    </section>
+
+    <!-- 4 plan -->
+    <section class="panel" data-step="3" style="margin-top:18px">
+      <div><div class="eyebrow">Step 4 · The plan</div><h2>Your launch checklist</h2>
+      <p class="sub" id="plan-sub">Dates are counted back from your last day. Check things off as you go.</p></div>
+      <ul class="plan" id="plan"></ul>
+      <div class="nav"><button class="btn" type="button" data-go="2">Back</button><button class="btn primary" type="button" data-go="4">Next: questions to ask</button></div>
+    </section>
+
+    <!-- 5 Q&A -->
+    <section class="panel" data-step="4" style="margin-top:18px">
+      <div><div class="eyebrow">Step 5 · Q&amp;A</div><h2>Questions to bring to your advisors</h2>
+      <p class="sub">Take these to your first meetings. Jot the answers here so they stay with your plan.</p></div>
+      <div class="cols" id="qa"></div>
+      <div class="panel noprint" style="background:var(--bg)">
+        <h3>Get a second opinion from your AI</h3>
+        <p class="sub">Copy a ready-made summary of your plan and paste it into Claude, ChatGPT or another assistant. Names are left out. Nothing is sent from this page.</p>
+        <div class="quick">
+          <button class="btn primary" type="button" id="btn-copy-ai">Copy my plan for AI</button>
+          <button class="btn" type="button" id="btn-show-ai">Show what gets copied</button>
+          <button class="btn" type="button" id="btn-print">Print or save as PDF</button>
+        </div>
+        <div class="copybox" id="ai-preview" hidden></div>
+      </div>
+      <div class="nav"><button class="btn" type="button" data-go="3">Back</button><span></span></div>
+    </section>
+    <p class="disclaimer" style="margin-top:18px">Planning tool, not tax, legal or financial advice. Uses 2026 federal brackets for a single filer, self-employment tax, the self-employed health deduction, Solo 401(k) limits and the 20% QBI deduction (phased out above about $200k of taxable income). States are a single flat rate you set. Married filers, S-corps and state credits aren't modeled.</p>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+"use strict";
+// ---------- state ----------
+const KEY="goSoloPlanner-v1";
+const n=v=>(v==null||v===""||!isFinite(+v))?0:+v;
+const BLANK={ started:false, step:0, name:"", role:"", years:null, age:40, service:"", clients:"", quit:"", state:"",
+  salary:null, bonus:0, deferPct:6, matchPct:4, curPrem:250, stRate:4, stStd:0,
+  rate:100, hpw:30, health:700, otherIns:150, oop:1500, overhead:9000, daysOff:25, retire:null,
+  savings:null, expenses:null, gapWeeks:4, terms:"30", startup:2500, buffer:3, checks:{}, notes:{}, badges:[] };
+const SAMPLE={ started:true, step:0, name:"Sam", role:"Operations manager", years:14, age:44, service:"Warehouse and fulfillment process improvement",
+  clients:"Regional distributors with 50-500 staff", quit:"", state:"Ohio",
+  salary:95000, bonus:6000, deferPct:6, matchPct:4, curPrem:240, stRate:3, stStd:0,
+  rate:110, hpw:30, health:650, otherIns:140, oop:2000, overhead:9500, daysOff:25, retire:null,
+  savings:22000, expenses:4200, gapWeeks:4, terms:"30", startup:3000, buffer:3, checks:{}, notes:{}, badges:[] };
+let S=clone(BLANK);
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function sanitize(d){
+  const out=clone(BLANK); if(!d||typeof d!=="object"||Array.isArray(d)) return out;
+  for(const k of Object.keys(BLANK)){ if(!(k in d)) continue; const v=d[k], b=BLANK[k];
+    if(k==="checks"||k==="notes"){ if(v&&typeof v==="object"&&!Array.isArray(v)) for(const [kk,vv] of Object.entries(v)) out[k][String(kk)]=k==="checks"?!!vv:String(vv); }
+    else if(k==="badges"){ if(Array.isArray(v)) out.badges=v.map(String); }
+    else if(k==="started") out.started=!!v;
+    else if(k==="step"){ const i=Math.round(+v); out.step=(i>=0&&i<=4)?i:0; }
+    else if(k==="terms"){ out.terms=["0","15","30","45","60","90"].includes(String(v))?String(v):"30"; }
+    else if(k==="quit"){ out.quit=/^\d{4}-\d{2}-\d{2}$/.test(String(v))?String(v):""; }
+    else if(typeof b==="string") out[k]=String(v==null?"":v).slice(0,300);
+    else out[k]=(v==null||v===""||!isFinite(+v))?b:Math.max(0,+v);
+  }
+  out.rate=Math.min(400,Math.max(25,n(out.rate)||100)); out.hpw=Math.min(60,Math.max(5,n(out.hpw)||30));
+  return out;
+}
+try{ const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S=sanitize(s); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function sampleQuit(){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+5); d.setDate(28); return iso(d); }
+function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+// ---------- tax engine (2026, single filer) ----------
+const FED_STD=16100, SS_BASE=184500, ADD_MED=200000, QBI_THR=201750, QBI_RANGE=75000;
+const BR=[[12400,.10],[50400,.12],[105700,.22],[201775,.24],[256225,.32],[640600,.35],[Infinity,.37]];
+function fedTax(t){ let tax=0,prev=0; for(const [top,r] of BR){ if(t<=prev)break; tax+=(Math.min(t,top)-prev)*r; prev=top; } return tax; }
+function stTax(agi){ return Math.max(0,agi-n(S.stStd))*n(S.stRate)/100; }
+function w2(){
+  const salary=n(S.salary), gross=salary+n(S.bonus);
+  const defer=gross*n(S.deferPct)/100, match=salary*n(S.matchPct)/100, prem=n(S.curPrem)*12;
+  const ficaW=Math.max(0,gross-prem);
+  const fica=Math.min(ficaW,SS_BASE)*.062+ficaW*.0145+Math.max(0,ficaW-ADD_MED)*.009;
+  const box1=Math.max(0,gross-defer-prem);
+  const fed=fedTax(Math.max(0,box1-FED_STD)), st=stTax(box1);
+  const take=gross-defer-prem-fica-fed-st;
+  return {gross,defer,match,prem,fica,fed,st,take,retire:defer+match};
+}
+function retireLimit(seEarn){
+  const age=n(S.age); const catchup=(age>=60&&age<=63)?11250:(age>=50?8000:0);
+  return Math.min(72000+catchup, seEarn, Math.min(24500+catchup,seEarn)+0.2*seEarn);
+}
+function consult(revenue, retireWanted){
+  const oh=n(S.overhead), profit=revenue-oh;
+  const seBase=Math.max(0,profit)*.9235;
+  const ss=Math.min(seBase,SS_BASE)*.124, med=seBase*.029, addMed=Math.max(0,seBase-ADD_MED)*.009;
+  const se=ss+med+addMed, halfSE=(ss+med)/2;
+  const seEarn=Math.max(0,profit-halfSE);
+  const retire=Math.max(0,Math.min(retireWanted,retireLimit(seEarn)));
+  const prem=n(S.health)*12, other=n(S.otherIns)*12, oop=n(S.oop);
+  const seHealth=Math.max(0,Math.min(prem,profit-halfSE-retire));
+  const agi=profit-halfSE-seHealth-retire;
+  const tib=Math.max(0,agi-FED_STD);
+  let qbiDed=0; { let base=.2*Math.max(0,profit-halfSE-seHealth-retire); if(tib>QBI_THR) base*=Math.max(0,1-(tib-QBI_THR)/QBI_RANGE); qbiDed=Math.min(base,.2*tib); }
+  const fed=fedTax(Math.max(0,tib-qbiDed)), st=stTax(Math.max(0,agi));
+  const take=revenue-oh-prem-other-oop-retire-se-fed-st;
+  return {revenue,oh,profit,se,prem,other,oop,retire,fed,st,take,qbiDed,agi};
+}
+function workWeeks(){ return Math.max(0,52-n(S.daysOff)/5); }
+function billHours(){ return workWeeks()*n(S.hpw); }
+function retireWanted(cur){ return S.retire==null||S.retire===""?cur.retire:n(S.retire); }
+function solveRevenue(target, retire){ let lo=0,hi=3e6; for(let i=0;i<80;i++){ const m=(lo+hi)/2; if(consult(m,retire).take<target) lo=m; else hi=m; } return hi; }
+function rateFor(pct){ const cur=w2(), H=billHours(); if(H<=0) return 0; return solveRevenue(cur.take*(1+pct/100), retireWanted(cur))/H; }
+function compute(){ const cur=w2(), H=billHours(), rev=n(S.rate)*H, c=consult(rev,retireWanted(cur)); return {cur,H,rev,c}; }
+
+// ---------- helpers ----------
+const $=id=>document.getElementById(id);
+const usd=v=>(v<0?"−":"")+"$"+Math.round(Math.abs(v)).toLocaleString("en-US");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){ const e=$("toast"); e.textContent=t; e.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>e.hidden=true,2400); }
+const fmtDate=d=>d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+function parseDate(s){ if(!s) return null; const [y,m,d]=s.split("-").map(Number); return y?new Date(y,m-1,d):null; }
+
+// ---------- steps ----------
+const STEPS=["Basics","Your rate","What's next","Plan","Q&A"];
+function showStep(i){
+  S.step=i; save();
+  document.querySelectorAll("section[data-step]").forEach(s=>s.hidden=+s.dataset.step!==i);
+  renderStepper(); render(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function readiness(){
+  const req=[S.role,S.service,S.quit,S.salary,S.savings,S.expenses];
+  let pts=req.filter(v=>v!==null&&v!=="").length/req.length*50;
+  pts+=Math.min(1,S.badges.length/4)*20;
+  const items=planItems(); pts+=items.length?Object.values(S.checks).filter(Boolean).length/items.length*30:0;
+  return Math.round(Math.min(100,pts));
+}
+function renderStepper(){
+  $("stepper").innerHTML=STEPS.map((l,i)=>`<button type="button" data-go="${i}" aria-label="Step ${i+1}: ${l}" ${i===S.step?'aria-current="step"':""} class="${i<S.step?"done":""}"><span class="n">0${i+1}</span><span class="l">${l}</span></button>`).join("");
+  const r=readiness(); $("xp-fill").style.width=r+"%"; $("xp-label").textContent=r+"% ready";
+}
+
+// ---------- calculator render ----------
+const MILESTONES=[{pct:null,id:"cover",label:"Covers your costs"},{pct:0,id:"match",label:"Matches today"},{pct:15,id:"p15",label:"+15%"},{pct:30,id:"p30",label:"+30%"},{pct:50,id:"p50",label:"+50%"}];
+function renderCalc(){
+  const {cur,H,rev,c}=compute();
+  $("v-rate").textContent="$"+S.rate; $("v-hpw").textContent=S.hpw;
+  $("r-rate").value=S.rate; $("r-hpw").value=S.hpw;
+  const diff=c.take-cur.take, pct=cur.take>0?diff/cur.take*100:0;
+  $("k-diff").textContent=cur.take>0?(diff>=0?"+":"−")+usd(Math.abs(diff)).replace("−",""):usd(c.take);
+  $("k-diffd").textContent=cur.take>0?`${pct>=0?"+":""}${pct.toFixed(0)}% · ${usd(c.take)} vs ${usd(cur.take)} today`:"Add your salary in step 1 to compare";
+  $("k-rev").textContent=usd(rev); $("k-revd").textContent=`${Math.round(H).toLocaleString()} billable hrs (${workWeeks().toFixed(0)} wks × ${S.hpw})`;
+  const be=rateFor(0); $("k-be").textContent=cur.take>0?usd(be)+"/hr":"–"; $("k-bed").textContent=cur.take>0?`+30% needs ${usd(rateFor(30))}/hr`:"";
+  // meter: 0 .. max(1.6x today, current)
+  const top=Math.max(cur.take*1.6, c.take*1.05, 1), lo=cur.take>0?Math.min(cur.take*.6, Math.max(0,c.take)):0, pos=v=>Math.max(0,Math.min(100,(v-lo)/(top-lo)*100));
+  $("meter-fill").style.width=pos(c.take)+"%";
+  $("meter").setAttribute("aria-label",cur.take>0?`Take-home ${usd(c.take)}, ${pct>=0?"+":""}${pct.toFixed(0)}% vs today`:`Take-home ${usd(c.take)}`);
+  const m=$("meter"); m.querySelectorAll(".mark").forEach(x=>x.remove());
+  if(cur.take>0) [0,15,30,50].forEach(p=>{ const v=cur.take*(1+p/100); if(v>top) return; const d=document.createElement("div"); d.className="mark"+(c.take>=v?" hit":"");
+    d.style.left=pos(v)+"%"; d.innerHTML=`<span>${p===0?"Today":"+"+p+"%"}</span><b>${usd(rateFor(p))}</b>`; m.appendChild(d); });
+  // badges
+  const earned=[]; if(c.take>0) earned.push("cover"); if(cur.take>0) MILESTONES.forEach(ms=>{ if(ms.pct!=null&&c.take>=cur.take*(1+ms.pct/100)) earned.push(ms.id); });
+  const fresh=earned.filter(id=>!S.badges.includes(id));
+  if(fresh.length){ S.badges=[...new Set([...S.badges,...fresh])]; const last=MILESTONES.find(x=>x.id===fresh[fresh.length-1]); toast("Unlocked: "+last.label); }
+  $("badges").innerHTML=MILESTONES.map(ms=>`<span class="badge ${earned.includes(ms.id)?"on":""} ${fresh.includes(ms.id)?"pop":""}">${earned.includes(ms.id)?"★ ":""}${ms.label}</span>`).join("");
+  // ledger
+  const rows=[["Pay or revenue",cur.gross,c.revenue],["Business overhead",0,-c.oh],["Health premiums",-cur.prem,-c.prem],["Other insurance",0,-c.other],["Extra out-of-pocket",0,-c.oop],
+    ["Retirement savings (yours)",-cur.defer,-c.retire],["Social Security + Medicare",-cur.fica,-c.se],["Federal income tax",-cur.fed,-c.fed],["State income tax",-cur.st,-c.st]];
+  $("ledger").tBodies[0].innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?usd(r[1]):"–"}</td><td>${r[2]?usd(r[2]):"–"}</td></tr>`).join("")+
+    `<tr class="grand"><td>Take-home cash</td><td>${usd(cur.take)}</td><td>${usd(c.take)}</td></tr><tr><td>Employer match</td><td>${usd(cur.match)}</td><td>–</td></tr>`;
+  const w=[];
+  if(!n(S.salary)) w.push("Add your salary in step 1 so the bar has something to beat.");
+  if(n(S.hpw)>40) w.push("Over 40 billable hours means more like 50+ real hours, once you add sales, admin and invoicing.");
+  if(c.retire+1<retireWanted(cur)) w.push(`Your retirement goal is above the Solo 401(k) limit at this profit, so it's capped at ${usd(c.retire)}.`);
+  if(n(S.age)>=65) w.push("At 65+ you get extra federal deductions this tool doesn't include, so your real tax is likely a bit lower.");
+  if(cur.take>0&&rateFor(0)*billHours()>=2.9e6) w.push("Your pay today is beyond what this calculator was built for. Treat these numbers as rough.");
+  if(c.profit>100000) w.push("At this profit, an S-corp election might lower your self-employment tax. Ask a CPA. This tool models a sole proprietor or single-member LLC.");
+  $("calc-warns").innerHTML=w.map(t=>`<div class="warn">${esc(t)}</div>`).join("");
+  return {cur,c};
+}
+
+// ---------- runway ----------
+function runway(){
+  const {cur,c}=compute();
+  const waitM=n(S.gapWeeks)/4.33+(n(S.terms)+30)/30; // work a month, invoice, then wait the terms
+  const monthly=n(S.expenses)+n(S.health)+n(S.otherIns)+(n(S.overhead)+n(S.oop))/12;
+  const need=monthly*(waitM+n(S.buffer))+n(S.startup);
+  const have=n(S.savings);
+  const taxRate=c.revenue>0?(c.se+c.fed+c.st)/c.revenue:0;
+  return {waitM,monthly,need,have,gap:have-need,taxRate,c,cur};
+}
+function renderRunway(){
+  const r=runway();
+  $("k-wait").textContent=r.waitM.toFixed(1); $("k-waitd").textContent=`${S.gapWeeks} wks to start + a month of work + ${S.terms==="0"?"payment on receipt":"net "+S.terms}`;
+  $("k-need").textContent=usd(r.need); $("k-needd").textContent=`${usd(r.monthly)}/mo × ${(r.waitM+n(S.buffer)).toFixed(1)} mo + ${usd(n(S.startup))} startup`;
+  $("k-have").textContent=usd(r.have); $("k-have").style.color=r.gap>=0?"var(--good)":"var(--bad)";
+  $("k-haved").textContent=r.gap>=0?`${usd(r.gap)} to spare`:`${usd(-r.gap)} short. Save more or line up a faster-paying client.`;
+  const parts=[["Wait for first payment",r.monthly*r.waitM,"var(--accent)"],["Safety buffer",r.monthly*n(S.buffer),"var(--steel)"],["Startup costs",n(S.startup),"var(--muted)"]];
+  const tot=Math.max(r.need,r.have,1);
+  $("runbar").innerHTML=parts.map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}" title="${p[0]} ${usd(p[1])}"></span>`).join("");
+  $("runlegend").innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]} ${usd(p[1])}</span>`).join("")+`<span>Bar width = the larger of what you need and what you have</span>`;
+  $("taxhint").innerHTML=r.c.revenue>0?`<b>Taxes come to roughly ${Math.ceil(r.taxRate*100)}% of revenue</b> in this estimate (${usd(r.c.se+r.c.fed+r.c.st)} a year at $${n(S.rate)}/hr), so many consultants set aside about that much from each payment. Confirm the number with your CPA. That money isn't runway. Federal estimated payments are due Apr 15, Jun 15, Sep 15 and Jan 15.`:"Set your rate in step 2 to see how much to set aside for taxes.";
+  const w=[];
+  if(!n(S.savings)||!n(S.expenses)) w.push("Fill in savings and household spending to see your runway.");
+  w.push("Health insurance: losing job coverage opens a 60-day special enrollment window on the marketplace. Get quotes before you give notice, and compare with COBRA.");
+  $("run-warns").innerHTML=w.map(t=>`<div class="warn">${esc(t)}</div>`).join("");
+}
+
+// ---------- plan ----------
+function planItems(){
+  const r=runway();
+  return [
+    {id:"agreement",d:-120,t:"Read your employment agreement and handbook",y:"Look for non-compete, non-solicit and intellectual-property clauses before you talk to any client."},
+    {id:"cpa",d:-120,t:"Book a CPA meeting",y:"Entity choice, quarterly estimates, S-corp timing and your first-year tax set-aside. Questions are in step 5."},
+    {id:"name",d:-100,t:"Pick a business name and check it",y:"State business registry, domain name and the USPTO trademark search."},
+    {id:"offer",d:-90,t:"Write a one-page offer",y:"Who you help, the problem you solve, how you charge. Test it on three people you trust."},
+    {id:"pipeline",d:-90,t:"List 20 people who could hire or refer you",y:"Former bosses, vendors, peers who moved companies. Don't pitch employer clients if your agreement forbids it."},
+    {id:"health",d:-75,t:"Get health insurance quotes",y:"Marketplace, COBRA, a partner's plan or a professional association plan."},
+    {id:"save",d:-60,t:`Reach ${usd(r.need)} in savings`,y:r.gap>=0?"You're there. Keep it separate from your tax set-aside.":`About ${usd(-r.gap)} to go.`},
+    {id:"llc",d:-60,t:"Form your LLC (or decide to stay a sole proprietor) and get an EIN",y:"The EIN is free on irs.gov and takes minutes."},
+    {id:"bank",d:-50,t:"Open a business bank account and pick bookkeeping software",y:"Keep business and personal money apart from day one."},
+    {id:"liability",d:-45,t:"Buy professional liability (E&O) and general liability",y:"Many clients ask for a certificate of insurance before you start."},
+    {id:"contract",d:-45,t:"Have an attorney review your contract template",y:"Scope, payment terms, late fees, IP ownership, limitation of liability, termination."},
+    {id:"client",d:-30,t:"Get a first client to say yes in writing",y:"A signed statement of work or letter of intent, with a start date."},
+    {id:"site",d:-21,t:"Get your LinkedIn and a simple website ready (don't publish yet)",y:"Go public after you've given notice."},
+    {id:"notice",d:-14,t:"Give notice",y:"Two weeks is typical. Confirm your PTO payout and last paycheck in writing."},
+    {id:"last",d:0,t:"Last day",y:"Start health coverage, roll over your 401(k) or leave it, and save your final pay stub."},
+    {id:"launch",d:7,t:"Announce your business and start client work",y:"Post on LinkedIn, tell your list of 20, send your first invoice on schedule."},
+    {id:"solo401k",d:30,t:"Open a Solo 401(k)",y:"Ask your CPA about setup deadlines. Your Solo 401(k) and W-2 401(k) deferrals share one yearly limit in the year you quit."},
+    {id:"estimates",d:45,t:"Put estimated tax dates on your calendar",y:`This estimate suggests setting aside about ${Math.ceil(r.taxRate*100)||25}% of each payment in a separate account.`},
+  ];
+}
+function renderPlan(){
+  const q=parseDate(S.quit), today=new Date(); today.setHours(0,0,0,0);
+  $("plan-sub").textContent=q?`Dates are counted back from your last day, ${fmtDate(q)}. Check things off as you go.`:"Add your target last day in step 1 to put dates on these.";
+  $("plan").innerHTML=planItems().map(it=>{ let when="", late=false;
+    if(q){ const d=new Date(q); d.setDate(d.getDate()+it.d); when=fmtDate(d); late=d<today&&!S.checks[it.id]; }
+    else when=it.d<0?`${-it.d} days before`:it.d===0?"Last day":`${it.d} days after`;
+    return `<li class="${S.checks[it.id]?"checked":""} ${late?"late":""}"><input type="checkbox" data-check="${it.id}" id="ck-${it.id}" ${S.checks[it.id]?"checked":""} aria-label="${esc(it.t)}"><span class="when">${when}${late?" · overdue":""}</span><label class="what" for="ck-${it.id}">${esc(it.t)}<span class="why">${esc(it.y)}</span></label></li>`; }).join("");
+}
+
+// ---------- Q&A ----------
+const QA=[
+  {id:"cpa",who:"Your CPA",qs:["Should I be a sole proprietor, a single-member LLC, or elect S-corp, and at what profit does S-corp pay off?","How much should I set aside from each payment, and how do I pay quarterly estimates in my first year?","Does my work count as a 'specified service' for the QBI deduction?","Solo 401(k) or SEP-IRA, and how much can I put in this year?","What can I deduct: home office, equipment, health insurance, mileage?","What records and software do you want me to use?"]},
+  {id:"attorney",who:"Your attorney",qs:["Does anything in my employment agreement limit who I can work for, or for how long?","Can you review my contract template: scope, payment terms, IP, liability cap, termination?","Do I need an LLC for liability protection, or is insurance enough for my work?","If I subcontract through another firm, what should I watch for in their agreement (non-solicit, payment timing)?","Which state registrations or licenses does my work need?"]},
+  {id:"client",who:"Your first client",qs:["What's the scope for the first 90 days, and how will we measure success?","How are invoices approved, and what are your payment terms?","Do you need a certificate of insurance or a W-9 before I start?","Who's my day-to-day contact, and who signs off on changes in scope?","Is this likely to continue or grow after the first project?"]},
+  {id:"insurance",who:"Your insurance agent",qs:["What would a marketplace plan comparable to my current coverage cost, and does my income qualify for any subsidy?","How does COBRA compare for the first few months?","What do professional liability and general liability cost for my type of work?","Should I replace the disability and life coverage my employer gives me today?"]},
+];
+function renderQA(){
+  $("qa").innerHTML=QA.map(g=>`<div class="qgroup"><h3>${g.who}</h3><ol>${g.qs.map(q=>`<li>${esc(q)}</li>`).join("")}</ol>
+    <label class="eyebrow" for="note-${g.id}">Answers and notes</label><textarea id="note-${g.id}" data-note="${g.id}">${esc(S.notes[g.id]||"")}</textarea></div>`).join("");
+}
+
+// ---------- AI hand-off ----------
+function aiPrompt(){
+  const r=runway(), {cur,c}=r, be=rateFor(0), p30=rateFor(30);
+  const done=planItems().filter(i=>S.checks[i.id]).map(i=>i.t), todo=planItems().filter(i=>!S.checks[i.id]).map(i=>i.t);
+  const notes=QA.filter(g=>S.notes[g.id]).map(g=>`- ${g.who}: ${S.notes[g.id].replace(/\s+/g," ").slice(0,600)}`);
+  return `I'm planning to leave my W-2 job and start consulting. I used a planning calculator and want a second opinion. Please check my assumptions, point out risks I'm missing, and suggest what to do first. Ask me questions if something is unclear. This is planning, so flag anything I should confirm with a CPA or attorney.
+
+ABOUT ME
+- Job today: ${S.role||"(not given)"}, ${S.years||"?"} years of experience, age ${S.age||"?"}
+- What I'd sell: ${S.service||"(not given)"}
+- To whom: ${S.clients||"(not given)"}
+- State: ${S.state||"(not given)"}; target last day: ${S.quit||"(not set)"}
+
+TODAY (W-2)
+- Pay ${usd(cur.gross)}/yr incl. bonus; I save ${S.deferPct}% to 401(k), employer matches ${S.matchPct}%
+- Take-home after taxes, premiums and 401(k): ${usd(cur.take)}/yr
+
+CONSULTING SCENARIO
+- $${S.rate}/hr at ${S.hpw} billable hrs/week, ${n(S.daysOff)} days off a year = ${Math.round(billHours()).toLocaleString()} billable hrs, revenue ${usd(c.revenue)}
+- Costs: overhead ${usd(c.oh)}/yr, health ${usd(c.prem)}/yr, other insurance ${usd(c.other)}/yr, out-of-pocket ${usd(c.oop)}/yr, retirement ${usd(c.retire)}/yr
+- Taxes: self-employment ${usd(c.se)}, federal ${usd(c.fed)}, state ${usd(c.st)} (flat ${S.stRate}% estimate)
+- Take-home: ${usd(c.take)}/yr (${cur.take>0?((c.take/cur.take-1)*100).toFixed(0)+"% vs today":"no comparison"})
+- Break-even rate: ${usd(be)}/hr; +30% take-home rate: ${usd(p30)}/hr
+
+RUNWAY
+- Savings ${usd(r.have)}; household spending ${usd(n(S.expenses))}/mo; ${S.gapWeeks} weeks to first client; client terms ${S.terms==="0"?"on receipt":"net "+S.terms}
+- Cash needed on last day: ${usd(r.need)} (${r.gap>=0?usd(r.gap)+" to spare":usd(-r.gap)+" short"})
+- Planned tax set-aside: about ${Math.ceil(r.taxRate*100)}% of each payment
+
+PLAN
+- Done: ${done.length?done.join("; "):"nothing yet"}
+- Still to do: ${todo.join("; ")}
+${notes.length?"\nNOTES FROM ADVISOR MEETINGS\n"+notes.join("\n"):""}
+
+The calculator uses 2026 federal rules for a single filer, a flat state rate, and models a sole proprietor or single-member LLC.`;
+}
+async function copyAI(){
+  const t=aiPrompt();
+  try{ await navigator.clipboard.writeText(t); toast("Copied. Paste it into your AI assistant."); }
+  catch(e){ $("ai-preview").hidden=false; $("ai-preview").textContent=t; toast("Couldn't copy automatically. Select the text below."); }
+}
+
+// ---------- wiring ----------
+function render(){ renderCalc(); renderRunway(); renderPlan(); renderStepper(); save(); }
+function fillInputs(){
+  document.querySelectorAll("[data-k]").forEach(el=>{ const v=S[el.dataset.k]; el.value=v==null?"":v; });
+  renderQA();
+}
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.dataset.k){ const k=el.dataset.k; const numeric=el.type==="number"||el.type==="range";
+    S[k]=numeric?(el.value===""?null:Math.max(0,+el.value)):el.value.slice(0,300); if(k==="terms") S[k]=el.value; render(); }
+  if(el.dataset.note){ S.notes[el.dataset.note]=el.value; save(); }
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.check){ S.checks[el.dataset.check]=el.checked; renderPlan(); renderStepper(); save(); if(el.checked) toast("Nice. One more thing done."); }
+  if(el.dataset.k==="terms"){ S.terms=el.value; render(); }
+});
+document.addEventListener("click",e=>{
+  const go=e.target.closest("[data-go]"); if(go){ showStep(+go.dataset.go); return; }
+  const j=e.target.closest("[data-jump]"); if(j){ const r=rateFor(+j.dataset.jump); if(billHours()<=0) toast("Lower your days off or raise your hours so there's time to bill.");
+    else if(r>0){ const want=Math.ceil(r/5)*5; S.rate=Math.min(400,Math.max(25,want)); render(); if(want>400) toast(`That needs about ${usd(r)}/hr, above this slider's $400 top.`); }
+    else toast("Add your salary in step 1 first."); }
+});
+$("start-blank").onclick=()=>{ S=clone(BLANK); S.started=true; begin(); };
+$("start-sample").onclick=()=>{ S=clone(SAMPLE); S.quit=sampleQuit(); begin(); };
+$("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to clear everything"; toast("This clears your whole plan. Save a copy first if you want to keep it."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start over"; },4000); return; } delete b.dataset.armed; b.textContent="Start over"; S=clone(BLANK); save(); $("flow").hidden=true; $("welcome").hidden=false; };
+$("btn-copy-ai").onclick=copyAI;
+$("btn-show-ai").onclick=()=>{ const p=$("ai-preview"); p.hidden=!p.hidden; p.textContent=aiPrompt(); };
+$("btn-print").onclick=()=>window.print();
+$("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="go-solo-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
+$("file-import").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); S=sanitize(d); S.started=true; begin(S.step||0); toast("Plan loaded."); }catch(err){ toast("That file isn't a saved plan."); } e.target.value=""; };
+function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; fillInputs(); showStep(step||0); }
+if(S.started) begin(S.step); else $("welcome").hidden=false;
+window.__planner={w2,consult,solveRevenue,rateFor,runway,billHours,get S(){return S;},set S(v){S=v;}};
+</script>
+</body>
+</html>
