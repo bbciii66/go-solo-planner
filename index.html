@@ -122,6 +122,9 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
 .qgroup ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .copybox{font:13px/1.45 var(--mono);white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:320px;overflow:auto}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:calc(100vw - 32px)}
+.choice.featured{border-color:var(--accent);background:var(--accent-soft)}
+.sample-home{order:3;flex-basis:100%;justify-self:center;align-self:center;margin-top:4px}
+.samplebar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:14px}
 .welcome{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .choice{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .printonly{display:none}
@@ -155,21 +158,22 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   <section class="panel" id="welcome" hidden>
     <h2>Where do you want to start?</h2>
     <div class="welcome">
-      <div class="choice">
-        <h3>Start blank</h3>
-        <p class="sub">Type in your own numbers as you go. Have a recent pay stub handy.</p>
-        <button class="btn primary" type="button" id="start-blank">Start my plan</button>
+      <div class="choice featured">
+        <h3>See it with Sam first</h3>
+        <p class="sub">Sam is a made-up operations manager on $95k. Play with his rate, runway and plan to see what the tool does, then start your own.</p>
+        <button class="btn primary" type="button" id="start-sample">Show me Sam's plan</button>
       </div>
       <div class="choice">
-        <h3>Try the sample person</h3>
-        <p class="sub">Explore with a made-up person, Sam, an operations manager on $95k. You can change anything.</p>
-        <button class="btn" type="button" id="start-sample">Load the sample</button>
+        <h3>Start my own plan</h3>
+        <p class="sub">Type in your own numbers as you go. Have a recent pay stub handy.</p>
+        <button class="btn" type="button" id="start-blank">Start blank</button>
       </div>
     </div>
     <p class="disclaimer">This is a planning tool, not tax, legal or financial advice. It uses 2026 federal tax rules for a single filer, plus a simple flat rate for your state. Have a CPA check your numbers before you decide.</p>
   </section>
 
   <div id="flow" hidden>
+    <div class="samplebar noprint" id="samplebar" hidden><span><b>You're viewing Sam's sample.</b> These are made-up numbers. Change anything to see what happens.</span><button class="btn small primary" type="button" id="sample-exit">Start my own plan</button></div>
     <nav class="stepper noprint" id="stepper" aria-label="Steps"></nav>
     <div class="xp noprint" style="margin-top:10px"><span id="xp-label">0% ready</span><div class="track"><div class="fill" id="xp-fill"></div></div></div>
 
@@ -195,7 +199,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
         <div class="field"><label for="f-prem">Your health, dental and vision premiums ($/month)</label><input type="number" id="f-prem" data-k="curPrem" step="10" min="0"><small>Your share, from your pay stub.</small></div>
         <div class="field"><label for="f-strate">State income tax rate (%)</label><input type="number" id="f-strate" data-k="stRate" step="0.1" min="0" max="15"><small>Use 0 for states with no income tax. A flat estimate is fine.</small></div>
       </div>
-      <div class="nav"><span></span><button class="btn primary" type="button" data-go="1">Next: find my rate</button></div>
+      <div class="nav"><button class="btn small ghost sample-home" type="button" data-sample-home hidden>Leave Sam's sample, back to start</button><span></span><button class="btn primary" type="button" data-go="1">Next: find my rate</button></div>
     </section>
 
     <!-- 2 calculator -->
@@ -233,7 +237,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
           <div class="field"><label for="c-std">State standard deduction ($)</label><input type="number" id="c-std" data-k="stStd" step="500" min="0"><small>Rough is fine. 0 if unsure.</small></div>
         </div>
       </details>
-      <div class="nav"><button class="btn" type="button" data-go="0">Back</button><button class="btn primary" type="button" data-go="2">Next: what's next</button></div>
+      <div class="nav"><button class="btn small ghost sample-home" type="button" data-sample-home hidden>Leave Sam's sample, back to start</button><button class="btn" type="button" data-go="0">Back</button><button class="btn primary" type="button" data-go="2">Next: what's next</button></div>
     </section>
 
     <!-- 3 what's next -->
@@ -257,7 +261,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
       <div class="legend" id="runlegend"></div>
       <div class="hint" id="taxhint"></div>
       <div id="run-warns"></div>
-      <div class="nav"><button class="btn" type="button" data-go="1">Back</button><button class="btn primary" type="button" data-go="3">Next: build my plan</button></div>
+      <div class="nav"><button class="btn small ghost sample-home" type="button" data-sample-home hidden>Leave Sam's sample, back to start</button><button class="btn" type="button" data-go="1">Back</button><button class="btn primary" type="button" data-go="3">Next: build my plan</button></div>
     </section>
 
     <!-- 4 plan -->
@@ -265,7 +269,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
       <div><div class="eyebrow">Step 4 · The plan</div><h2>Your launch checklist</h2>
       <p class="sub" id="plan-sub">Dates are counted back from your last day. Check things off as you go.</p></div>
       <ul class="plan" id="plan"></ul>
-      <div class="nav"><button class="btn" type="button" data-go="2">Back</button><button class="btn primary" type="button" data-go="4">Next: questions to ask</button></div>
+      <div class="nav"><button class="btn small ghost sample-home" type="button" data-sample-home hidden>Leave Sam's sample, back to start</button><button class="btn" type="button" data-go="2">Back</button><button class="btn primary" type="button" data-go="4">Next: questions to ask</button></div>
     </section>
 
     <!-- 5 Q&A -->
@@ -283,7 +287,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
         </div>
         <div class="copybox" id="ai-preview" hidden></div>
       </div>
-      <div class="nav"><button class="btn" type="button" data-go="3">Back</button><span></span></div>
+      <div class="nav"><button class="btn small ghost sample-home" type="button" data-sample-home hidden>Leave Sam's sample, back to start</button><button class="btn" type="button" data-go="3">Back</button><span></span></div>
     </section>
     <p class="disclaimer" style="margin-top:18px">Planning tool, not tax, legal or financial advice. Uses 2026 federal brackets for a single filer, self-employment tax, the self-employed health deduction, Solo 401(k) limits and the 20% QBI deduction (phased out above about $200k of taxable income). States are a single flat rate you set. Married filers, S-corps and state credits aren't modeled.</p>
   </div>
@@ -295,11 +299,11 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
 // ---------- state ----------
 const KEY="goSoloPlanner-v1";
 const n=v=>(v==null||v===""||!isFinite(+v))?0:+v;
-const BLANK={ started:false, step:0, name:"", role:"", years:null, age:40, service:"", clients:"", quit:"", state:"",
+const BLANK={ started:false, sample:false, step:0, name:"", role:"", years:null, age:40, service:"", clients:"", quit:"", state:"",
   salary:null, bonus:0, deferPct:6, matchPct:4, curPrem:250, stRate:4, stStd:0,
   rate:100, hpw:30, health:700, otherIns:150, oop:1500, overhead:9000, daysOff:25, retire:null,
   savings:null, expenses:null, gapWeeks:4, terms:"30", startup:2500, buffer:3, checks:{}, notes:{}, badges:[] };
-const SAMPLE={ started:true, step:0, name:"Sam", role:"Operations manager", years:14, age:44, service:"Warehouse and fulfillment process improvement",
+const SAMPLE={ started:true, sample:true, step:1, name:"Sam", role:"Operations manager", years:14, age:44, service:"Warehouse and fulfillment process improvement",
   clients:"Regional distributors with 50-500 staff", quit:"", state:"Ohio",
   salary:95000, bonus:6000, deferPct:6, matchPct:4, curPrem:240, stRate:3, stStd:0,
   rate:110, hpw:30, health:650, otherIns:140, oop:2000, overhead:9500, daysOff:25, retire:null,
@@ -311,7 +315,7 @@ function sanitize(d){
   for(const k of Object.keys(BLANK)){ if(!(k in d)) continue; const v=d[k], b=BLANK[k];
     if(k==="checks"||k==="notes"){ if(v&&typeof v==="object"&&!Array.isArray(v)) for(const [kk,vv] of Object.entries(v)) out[k][String(kk)]=k==="checks"?!!vv:String(vv); }
     else if(k==="badges"){ if(Array.isArray(v)) out.badges=v.map(String); }
-    else if(k==="started") out.started=!!v;
+    else if(k==="started"||k==="sample") out[k]=!!v;
     else if(k==="step"){ const i=Math.round(+v); out.step=(i>=0&&i<=4)?i:0; }
     else if(k==="terms"){ out.terms=["0","15","30","45","60","90"].includes(String(v))?String(v):"30"; }
     else if(k==="quit"){ out.quit=/^\d{4}-\d{2}-\d{2}$/.test(String(v))?String(v):""; }
@@ -572,14 +576,17 @@ document.addEventListener("click",e=>{
     else toast("Add your salary in step 1 first."); }
 });
 $("start-blank").onclick=()=>{ S=clone(BLANK); S.started=true; begin(); };
-$("start-sample").onclick=()=>{ S=clone(SAMPLE); S.quit=sampleQuit(); begin(); };
+$("start-sample").onclick=()=>{ S=clone(SAMPLE); S.quit=sampleQuit(); begin(1); };
+function leaveSample(){ S=clone(BLANK); save(); $("flow").hidden=true; $("welcome").hidden=false; window.scrollTo({top:0,behavior:"smooth"}); }
+document.addEventListener("click",e=>{ if(e.target.closest("[data-sample-home]")) leaveSample(); });
+$("sample-exit").onclick=()=>{ S=clone(BLANK); S.started=true; begin(0); toast("Fresh plan started. Sam's numbers are cleared."); };
 $("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to clear everything"; toast("This clears your whole plan. Save a copy first if you want to keep it."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start over"; },4000); return; } delete b.dataset.armed; b.textContent="Start over"; S=clone(BLANK); save(); $("flow").hidden=true; $("welcome").hidden=false; };
 $("btn-copy-ai").onclick=copyAI;
 $("btn-show-ai").onclick=()=>{ const p=$("ai-preview"); p.hidden=!p.hidden; p.textContent=aiPrompt(); };
 $("btn-print").onclick=()=>window.print();
 $("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="go-solo-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
 $("file-import").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); S=sanitize(d); S.started=true; begin(S.step||0); toast("Plan loaded."); }catch(err){ toast("That file isn't a saved plan."); } e.target.value=""; };
-function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; fillInputs(); showStep(step||0); }
+function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; $("samplebar").hidden=!S.sample; document.querySelectorAll("[data-sample-home]").forEach(b=>b.hidden=!S.sample); fillInputs(); showStep(step||0); }
 if(S.started) begin(S.step); else $("welcome").hidden=false;
 window.__planner={w2,consult,solveRevenue,rateFor,runway,billHours,get S(){return S;},set S(v){S=v;}};
 </script>
