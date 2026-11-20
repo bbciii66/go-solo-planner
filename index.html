@@ -146,7 +146,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   .printonly{display:block}
   section[data-step]{display:flex!important;break-inside:avoid-page}
   .panel{border-color:#ccc;break-inside:avoid}
-  :root{--bg:#fff;--panel:#fff;--ink:#111;--muted:#555;--line:#ccc;color-scheme:light}
+  :root,:root[data-theme],:root:not([data-theme="light"]){--bg:#fff;--panel:#fff;--ink:#111;--muted:#555;--line:#ccc;--accent:#8A5A00;--accent-soft:#FBEFC9;--steel:#2F4A6B;--steel-soft:#eef0f3;--good:#2f7a4b;--good-soft:#E3EEDB;--bad:#a23b2f;--bad-soft:#F6E1DA;--gold:#C99A1E;--honey:#E3A410;--logo-ink:#1F2430;--logo-muted:#6B6455;color-scheme:light}
 }
 </style>
 </head>
@@ -646,7 +646,8 @@ function logoSVG(animate){
    +'</svg>';
 }
 const calm=()=>{ try{ return matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } };
-function drawLogo(){ $("brand").innerHTML=logoSVG(!calm()); const svg=$("brand").firstChild; if(!calm()){ const replay=()=>drawLogo(); svg.addEventListener("click",replay); svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); replay(); } }); svg.setAttribute("aria-label","Bee2Boss. Press to play the flight again."); } }
+function drawLogo(keepFocus){ const still=calm(); $("brand").innerHTML=logoSVG(!still); const svg=$("brand").firstChild; if(!still){ const replay=()=>drawLogo(document.activeElement===svg); svg.setAttribute("role","button"); svg.setAttribute("aria-label","Bee2Boss logo. Play the flight again"); svg.addEventListener("click",replay); svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); replay(); } }); if(keepFocus) svg.focus(); } }
+try{ matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change",()=>drawLogo()); }catch(e){}
 function isDark(){ const t=document.documentElement.dataset.theme; if(t) return t==="dark"; try{ return matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; } }
 function paintTheme(){ const d=isDark(); const b=$("btn-theme"); b.textContent=d?"Light":"Dark"; b.setAttribute("aria-label",d?"Switch to light theme":"Switch to dark theme"); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=d?"#2B303B":"#F3EBDA"; }
 $("btn-theme").onclick=()=>{ const t=isDark()?"light":"dark"; document.documentElement.dataset.theme=t; try{ localStorage.setItem("bee2boss-theme",t); }catch(e){} paintTheme(); };
