@@ -622,7 +622,7 @@ $("continue-btn").onclick=()=>{ if(S.sample){ stashSam(); const o=takeOwn(); if(
 $("btn-home").onclick=()=>{ if(!S.started) return; save(); showWelcome(); };
 $("start-blank").onclick=()=>{ if(S.sample) stashSam(); const hasOwn=(S.started&&!S.sample)||peekOwn(); if(hasOwn&&!$("start-blank").dataset.armed){ const b=$("start-blank"); b.dataset.armed="1"; b.textContent="Tap again to replace your saved plan"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start blank"; },4000); return; }
   S=clone(BLANK); S.started=true; begin(0); };
-$("start-sample").onclick=()=>{ stashOwn(); S=loadSam(); begin(1); };
+$("start-sample").onclick=()=>{ if(S.sample) stashSam(); else stashOwn(); S=loadSam(); begin(1); };
 const SAMKEY="bee2boss-sam";
 function stashSam(){ try{ if(S.sample) localStorage.setItem(SAMKEY,JSON.stringify(S)); }catch(e){} }
 function freshSam(){ const s=clone(SAMPLE); s.quit=sampleQuit(); return s; }
