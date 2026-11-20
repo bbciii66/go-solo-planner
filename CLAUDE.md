@@ -1,4 +1,4 @@
-# go-solo-planner
+# go-solo-planner (Bee2Boss)
 
 Public, single-file app (`index.html`, vanilla JS, no build). It's the generic version of a private rate calculator. The only person in it is the made-up sample, "Sam".
 
@@ -19,3 +19,7 @@ Public, single-file app (`index.html`, vanilla JS, no build). It's the generic v
 - State: one flat rate on (AGI minus a user-set standard deduction).
 - Test hook: `window.__planner` (w2, consult, solveRevenue, rateFor, runway, billHours, S).
 - The Artifact viewer blocks downloads, print and confirm(), so keep confirmations inside the page.
+
+## Brand
+- Name: Bee2Boss (capital E in "Self-Employed"). Logo/favicon: the face-bee hive badge (crowned bee, wings read as glasses). Header animation: a small bee flies up a dotted path and pops into a mini badge with a star; static when reduced motion is on. Click the logo to replay.
+- Themes: parchment light (#F3EBDA) and softer slate dark (#2B303B), toggle saved as `bee2boss-theme`. Saved-plan keys stay `goSoloPlanner-*` so old saves still load.

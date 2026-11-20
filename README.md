@@ -1,6 +1,8 @@
-# Go Solo Planner
+# Bee2Boss
 
-A free, guided planner for anyone thinking about leaving a W-2 job to start consulting.
+**Plan your move from W-2 to Self-Employed.**
+
+A free, guided planner for anyone thinking about leaving a W-2 job to work for themselves as a consultant or freelancer.
 
 It takes you through five short steps:
 
@@ -14,7 +16,7 @@ It takes you through five short steps:
 
 Open `index.html` in any browser. There's nothing to install and no account, and nothing you type leaves your device. Your plan is saved in your browser, and you can **Save a copy** as a file.
 
-Want to look around first? Pick **Try the sample person** to explore with Sam, a made-up operations manager.
+Want to look around first? Pick **See it with Sam first** to explore with Sam, a made-up operations manager.
 
 ## What the math covers
 
