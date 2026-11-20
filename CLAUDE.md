@@ -22,4 +22,5 @@ Public, single-file app (`index.html`, vanilla JS, no build). It's the generic v
 
 ## Brand
 - Name: Bee2Boss (capital E in "Self-Employed"). Logo/favicon: the face-bee hive badge (crowned bee, wings read as glasses). Header animation: a small bee flies up a dotted path and pops into a mini badge with a star; static when reduced motion is on. Click the logo to replay.
+- Plan switch: "My plan / Sam's plan" toggle in the flow keeps both. Own plan is parked in `goSoloPlanner-own` while viewing Sam; Sam's edits live in `bee2boss-sam` (Reset Sam's numbers clears it). Switching keeps the same step for comparison.
 - Themes: parchment light (#F3EBDA) and softer slate dark (#2B303B), toggle saved as `bee2boss-theme`. Saved-plan keys stay `goSoloPlanner-*` so old saves still load.
