@@ -136,6 +136,11 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:calc(100vw - 32px)}
 .choice.featured{border-color:var(--accent);background:var(--accent-soft)}
 .sample-home{order:3;flex-basis:100%;justify-self:center;align-self:center;margin-top:4px}
+.planswitch{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--panel);margin-bottom:12px;max-width:100%}
+.planswitch button{font:600 14px var(--body);border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:8px;min-height:40px;cursor:pointer}
+.planswitch button[aria-pressed="true"]{background:var(--steel);color:var(--panel)}
+.planswitch button:not([aria-pressed="true"]):hover{color:var(--ink)}
+.samplebar .acts{display:flex;gap:8px;flex-wrap:wrap}
 .samplebar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:14px}
 .welcome{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .choice{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
@@ -192,7 +197,11 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   </section>
 
   <div id="flow" hidden>
-    <div class="samplebar noprint" id="samplebar" hidden><span><b>You're viewing Sam's sample.</b> These are made-up numbers. Change anything to see what happens.</span><button class="btn small primary" type="button" id="sample-exit">Start my own plan</button></div>
+    <div class="planswitch noprint" role="group" aria-label="Whose plan to show">
+      <button type="button" id="sw-own" aria-pressed="true">My plan</button>
+      <button type="button" id="sw-sam" aria-pressed="false">Sam's plan</button>
+    </div>
+    <div class="samplebar noprint" id="samplebar" hidden><span id="samplebar-text"><b>You're viewing Sam's sample.</b> These are made-up numbers. Change anything to see what happens.</span><span class="acts"><button class="btn small ghost" type="button" id="sam-reset">Reset Sam's numbers</button><button class="btn small primary" type="button" id="sample-exit">Start my own plan</button></span></div>
     <nav class="stepper noprint" id="stepper" aria-label="Steps"></nav>
     <div class="xp noprint" style="margin-top:10px"><span id="xp-label">0% ready</span><div class="track"><div class="fill" id="xp-fill"></div></div></div>
 
@@ -612,17 +621,28 @@ $("continue-btn").onclick=()=>{ if(S.sample){ const o=takeOwn(); if(o) S=o; } be
 $("btn-home").onclick=()=>{ if(!S.started) return; save(); showWelcome(); };
 $("start-blank").onclick=()=>{ const hasOwn=(S.started&&!S.sample)||peekOwn(); if(hasOwn&&!$("start-blank").dataset.armed){ const b=$("start-blank"); b.dataset.armed="1"; b.textContent="Tap again to replace your saved plan"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Start blank"; },4000); return; }
   takeOwn(); S=clone(BLANK); S.started=true; begin(0); };
-$("start-sample").onclick=()=>{ stashOwn(); S=clone(SAMPLE); S.quit=sampleQuit(); begin(1); };
-function leaveSample(){ const own=takeOwn(); if(own){ S=own; begin(S.step); toast("Back to your own plan."); } else { S=clone(BLANK); save(); showWelcome(); } }
+$("start-sample").onclick=()=>{ stashOwn(); S=loadSam(); begin(1); };
+const SAMKEY="bee2boss-sam";
+function stashSam(){ try{ if(S.sample) localStorage.setItem(SAMKEY,JSON.stringify(S)); }catch(e){} }
+function freshSam(){ const s=clone(SAMPLE); s.quit=sampleQuit(); return s; }
+function loadSam(){ try{ const o=JSON.parse(localStorage.getItem(SAMKEY)||"null"); if(o){ const s=sanitize(o); if(s.sample) return s; } }catch(e){} return freshSam(); }
+function toSam(step){ if(S.sample) return; stashOwn(); S=loadSam(); begin(step); toast("This is Sam's plan. Yours is saved, so flip back any time."); }
+function toOwn(step){ if(!S.sample) return; stashSam(); const own=takeOwn(); if(own){ S=own; begin(step); toast("Back to your plan, right where you left it."); } else { S=clone(BLANK); S.started=true; begin(0); toast("Your own plan starts here. Sam's numbers are kept for when you flip back."); } }
+$("sw-sam").onclick=()=>toSam(S.step);
+$("sw-own").onclick=()=>toOwn(S.step);
+$("sam-reset").onclick=()=>{ if(!S.sample) return; const st=S.step; try{ localStorage.removeItem(SAMKEY); }catch(e){} S=freshSam(); begin(st); toast("Sam's numbers are back to the original."); };
+function leaveSample(){ stashSam();  const own=takeOwn(); if(own){ S=own; begin(S.step); toast("Back to your own plan."); } else { S=clone(BLANK); save(); showWelcome(); } }
 document.addEventListener("click",e=>{ if(e.target.closest("[data-sample-home]")) leaveSample(); });
-$("sample-exit").onclick=()=>{ const own=takeOwn(); if(own){ S=own; begin(S.step); toast("Back to your own plan."); } else { S=clone(BLANK); S.started=true; begin(0); toast("Your own plan starts here. Sam's numbers are cleared."); } };
-$("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to erase"; toast("This erases all your answers from this browser and goes back to the start page. Save a copy first to keep them."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Clear my plan"; },4000); return; } delete b.dataset.armed; b.textContent="Clear my plan"; try{ localStorage.removeItem(OWN); }catch(e){} S=clone(BLANK); save(); showWelcome(); toast("Cleared. Nothing is saved now."); };
+$("sample-exit").onclick=()=>toOwn(S.step);
+$("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap again to erase"; toast("This erases all your answers from this browser and goes back to the start page. Save a copy first to keep them."); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Clear my plan"; },4000); return; } delete b.dataset.armed; b.textContent="Clear my plan"; try{ localStorage.removeItem(OWN); localStorage.removeItem(SAMKEY); }catch(e){} S=clone(BLANK); save(); showWelcome(); toast("Cleared. Nothing is saved now."); };
 $("btn-copy-ai").onclick=copyAI;
 $("btn-show-ai").onclick=()=>{ const p=$("ai-preview"); p.hidden=!p.hidden; p.textContent=aiPrompt(); };
 $("btn-print").onclick=()=>window.print();
 $("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="bee2boss-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
 $("file-import").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); S=sanitize(d); S.started=true; begin(S.step||0); toast("Plan loaded."); }catch(err){ toast("That file isn't a saved plan."); } e.target.value=""; };
-function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; $("samplebar").hidden=!S.sample; document.querySelectorAll("[data-sample-home]").forEach(b=>b.hidden=!S.sample); fillInputs(); showStep(step||0); }
+function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; $("samplebar").hidden=!S.sample;
+  $("sw-own").setAttribute("aria-pressed",String(!S.sample)); $("sw-sam").setAttribute("aria-pressed",String(!!S.sample));
+  if(S.sample){ const has=peekOwn(); $("sample-exit").textContent=has?"Back to my plan":"Start my own plan"; $("samplebar-text").innerHTML=has?"<b>You're viewing Sam's sample.</b> Your own plan is saved. Use the switch above to flip back any time.":"<b>You're viewing Sam's sample.</b> These are made-up numbers. Change anything to see what happens."; } document.querySelectorAll("[data-sample-home]").forEach(b=>b.hidden=!S.sample); fillInputs(); showStep(step||0); }
 
 // ---------- brand: logo + theme ----------
 const BEE_PATH="M 446 130 C 520 130, 560 76, 620 56 S 690 30, 708 26";
