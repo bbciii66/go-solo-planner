@@ -3,26 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Go Solo Planner</title>
+<title>Bee2Boss · Plan your move from W-2 to Self-Employed</title>
 <meta name="description" content="A guided walkthrough for leaving a W-2 job to start consulting: basics, a rate calculator, runway, a dated plan and questions for your CPA and attorney. Runs entirely in your browser.">
-<meta name="theme-color" content="#2f4a6b">
+<meta name="theme-color" content="#F3EBDA">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2096%20104%22%3E%3Cpath%20d%3D%22M48%204%20L90%2028%20L90%2076%20L48%20100%20L6%2076%20L6%2028%20Z%22%20fill%3D%22%23F2B21B%22%20stroke%3D%22%231F2430%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M34%2030%20L40%2038%20L48%2028%20L56%2038%20L62%2030%20L60%2044%20L36%2044%20Z%22%20fill%3D%22%231F2430%22/%3E%3Cellipse%20cx%3D%2238%22%20cy%3D%2256%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23fff%22%20stroke%3D%22%231F2430%22%20stroke-width%3D%223%22/%3E%3Cellipse%20cx%3D%2258%22%20cy%3D%2256%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23fff%22%20stroke%3D%22%231F2430%22%20stroke-width%3D%223%22/%3E%3Cellipse%20cx%3D%2248%22%20cy%3D%2270%22%20rx%3D%2213%22%20ry%3D%2215%22%20fill%3D%22%231F2430%22/%3E%3Crect%20x%3D%2235%22%20y%3D%2264%22%20width%3D%2226%22%20height%3D%224%22%20fill%3D%22%23F2B21B%22/%3E%3Crect%20x%3D%2235%22%20y%3D%2273%22%20width%3D%2226%22%20height%3D%224%22%20fill%3D%22%23F2B21B%22/%3E%3C/svg%3E">
+<script>try{const t=localStorage.getItem("bee2boss-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{
-  --bg:#f3f4f6; --panel:#ffffff; --ink:#1b2330; --muted:#5b6575; --line:#d9dde4;
-  --accent:#b8681a; --accent-soft:#f6e7d6; --steel:#2f4a6b; --steel-soft:#e3e9f1;
-  --good:#2f7a4b; --good-soft:#e1f1e6; --bad:#a23b2f; --bad-soft:#f6e1de; --gold:#c99a1e;
+  --bg:#F3EBDA; --panel:#FBF6EA; --ink:#1F2430; --muted:#6B6455; --line:#DDD1B6;
+  --accent:#8A5A00; --accent-soft:#FBEFC9; --steel:#2F4A6B; --steel-soft:#E7E4D6;
+  --good:#2f7a4b; --good-soft:#E3EEDB; --bad:#a23b2f; --bad-soft:#F6E1DA; --gold:#C99A1E;
+  --honey:#E3A410; --logo-ink:#1F2430; --logo-muted:#6B6455; --badge-ink:#1F2430;
   --display:"Archivo","Helvetica Neue",Arial,sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#12161c; --panel:#1a2029; --ink:#e7ebf0; --muted:#9aa4b2; --line:#2c3440;
-  --accent:#e09a52; --accent-soft:#3a2a1a; --steel:#8fb0d6; --steel-soft:#1f2b3a;
-  --good:#6cc28f; --good-soft:#18301f; --bad:#e58a7e; --bad-soft:#3a1f1b; --gold:#e7c25a; color-scheme:dark } }
+  --bg:#2B303B; --panel:#353B47; --ink:#F1ECE2; --muted:#C3C0B8; --line:#4A5160;
+  --accent:#F2B21B; --accent-soft:#46402C; --steel:#F2B21B; --steel-soft:#3D4452;
+  --good:#7FD1A0; --good-soft:#2D4236; --bad:#EE9A8F; --bad-soft:#4A3432; --gold:#F2B21B;
+  --honey:#F2B21B; --logo-ink:#F1ECE2; --logo-muted:#C3C0B8; --badge-ink:#1F2430; color-scheme:dark } }
 :root[data-theme="dark"]{
-  --bg:#12161c; --panel:#1a2029; --ink:#e7ebf0; --muted:#9aa4b2; --line:#2c3440;
-  --accent:#e09a52; --accent-soft:#3a2a1a; --steel:#8fb0d6; --steel-soft:#1f2b3a;
-  --good:#6cc28f; --good-soft:#18301f; --bad:#e58a7e; --bad-soft:#3a1f1b; --gold:#e7c25a; color-scheme:dark }
+  --bg:#2B303B; --panel:#353B47; --ink:#F1ECE2; --muted:#C3C0B8; --line:#4A5160;
+  --accent:#F2B21B; --accent-soft:#46402C; --steel:#F2B21B; --steel-soft:#3D4452;
+  --good:#7FD1A0; --good-soft:#2D4236; --bad:#EE9A8F; --bad-soft:#4A3432; --gold:#F2B21B;
+  --honey:#F2B21B; --logo-ink:#F1ECE2; --logo-muted:#C3C0B8; --badge-ink:#1F2430; color-scheme:dark }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
@@ -45,6 +50,13 @@ header.top{display:flex;justify-content:space-between;align-items:flex-start;gap
 .btn.ghost{background:transparent}
 .btn.small{font-size:13px;padding:6px 10px;min-height:34px}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* brand */
+.brand{display:block;width:min(340px,100%);height:auto;overflow:visible;cursor:pointer;margin:-6px 0 6px -4px}
+.brand .lg-ink{fill:var(--logo-ink)} .brand .lg-muted{fill:var(--logo-muted)} .brand .lg-honey{fill:var(--honey)}
+.brand .lg-bink{fill:var(--badge-ink)} .brand .lg-bstroke{stroke:var(--badge-ink)} .brand .lg-wing{fill:#FFFFFF}
+.brand .lg-trail{stroke:var(--honey)} .brand .lg-ray{stroke:var(--honey)}
+.brand text{font-family:var(--display);font-size:66px}
+.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:8px}
 /* stepper */
 .stepper{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .stepper button{font:600 12.5px var(--body);text-align:left;border:0;border-top:4px solid var(--line);background:transparent;color:var(--muted);padding:8px 2px 0;cursor:pointer;min-height:44px}
@@ -134,7 +146,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
   .printonly{display:block}
   section[data-step]{display:flex!important;break-inside:avoid-page}
   .panel{border-color:#ccc;break-inside:avoid}
-  :root{--bg:#fff;--panel:#fff;--ink:#111;--muted:#555;--line:#ccc;color-scheme:light}
+  :root,:root[data-theme],:root:not([data-theme="light"]){--bg:#fff;--panel:#fff;--ink:#111;--muted:#555;--line:#ccc;--accent:#8A5A00;--accent-soft:#FBEFC9;--steel:#2F4A6B;--steel-soft:#eef0f3;--good:#2f7a4b;--good-soft:#E3EEDB;--bad:#a23b2f;--bad-soft:#F6E1DA;--gold:#C99A1E;--honey:#E3A410;--logo-ink:#1F2430;--logo-muted:#6B6455;color-scheme:light}
 }
 </style>
 </head>
@@ -142,7 +154,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow">Go Solo Planner</div>
+      <div id="brand"></div>
       <h1 id="title">Plan your move from W-2 to Self-Employed</h1>
       <p class="sub">Five short steps: the basics, your rate, your runway, a dated plan and the questions to ask. Everything stays in this browser.</p>
     </div>
@@ -152,6 +164,7 @@ tr.grand td{font-weight:700;background:var(--steel-soft)}
       <input type="file" id="file-import" accept="application/json" hidden>
       <button class="btn small ghost" id="btn-home" type="button">Start page</button>
       <button class="btn small ghost" id="btn-reset" type="button" title="Erases your answers from this browser">Clear my plan</button>
+      <button class="btn small ghost" id="btn-theme" type="button">Dark</button>
     </div>
   </header>
 
@@ -607,9 +620,39 @@ $("btn-reset").onclick=()=>{ if(!S.started) return; const b=$("btn-reset"); if(!
 $("btn-copy-ai").onclick=copyAI;
 $("btn-show-ai").onclick=()=>{ const p=$("ai-preview"); p.hidden=!p.hidden; p.textContent=aiPrompt(); };
 $("btn-print").onclick=()=>window.print();
-$("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="go-solo-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
+$("btn-export").onclick=()=>{ const b=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="bee2boss-plan.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); };
 $("file-import").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); S=sanitize(d); S.started=true; begin(S.step||0); toast("Plan loaded."); }catch(err){ toast("That file isn't a saved plan."); } e.target.value=""; };
 function begin(step){ $("welcome").hidden=true; $("flow").hidden=false; $("samplebar").hidden=!S.sample; document.querySelectorAll("[data-sample-home]").forEach(b=>b.hidden=!S.sample); fillInputs(); showStep(step||0); }
+
+// ---------- brand: logo + theme ----------
+const BEE_PATH="M 446 130 C 520 130, 560 76, 620 56 S 690 30, 708 26";
+function badgeSVG(){ return '<g transform="translate(-48 -52)"><path class="lg-honey lg-bstroke" d="M48 4 L90 28 L90 76 L48 100 L6 76 L6 28 Z" stroke-width="4" stroke-linejoin="round"/><path class="lg-bink" d="M34 30 L40 38 L48 28 L56 38 L62 30 L60 44 L36 44 Z"/><ellipse class="lg-wing lg-bstroke" cx="38" cy="56" rx="10" ry="7" stroke-width="3"/><ellipse class="lg-wing lg-bstroke" cx="58" cy="56" rx="10" ry="7" stroke-width="3"/><ellipse class="lg-bink" cx="48" cy="70" rx="13" ry="15"/><rect class="lg-honey" x="35" y="64" width="26" height="4"/><rect class="lg-honey" x="35" y="73" width="26" height="4"/></g>'; }
+function flyBee(){ return '<g transform="scale(0.9)"><g><animateTransform attributeName="transform" type="rotate" values="-18 -2 -6;14 -2 -6;-18 -2 -6" dur="0.12s" repeatCount="20"/><ellipse class="lg-wing lg-bstroke" cx="-2" cy="-14" rx="6" ry="11" transform="rotate(-25 -2 -14)" fill-opacity="0.8" stroke-width="1" stroke-opacity="0.6"/></g><ellipse class="lg-wing lg-bstroke" cx="5" cy="-12" rx="5" ry="9" transform="rotate(20 5 -12)" fill-opacity="0.6" stroke-width="1" stroke-opacity="0.5"/><path class="lg-bink" d="M-16 2 L-21 4 L-16 6 Z"/><ellipse class="lg-honey lg-bstroke" cx="-4" cy="3" rx="13" ry="8" stroke-width="1.2"/><path class="lg-bstroke" d="M-9 -4.5 Q -10 3 -9 10.5 M-2 -5 Q -3 3 -2 11" fill="none" stroke-width="3.2"/><circle class="lg-bink" cx="11" cy="0" r="6"/><circle cx="13" cy="-1.5" r="1.6" fill="#FFFFFF"/><path class="lg-bstroke" d="M13 -5 Q 16 -12 21 -13 M10 -5.5 Q 11 -13 15 -16" fill="none" stroke-width="1.2" stroke-linecap="round"/></g>'; }
+function logoSVG(animate){
+  const T='dur="2.4s" begin="0s" fill="freeze"';
+  const star='<path class="lg-honey" d="M0 -17 L5 -6 L17 -5 L8 3 L11 15 L0 9 L-11 15 L-8 3 L-17 -5 L-5 -6 Z" fill-opacity="0.45" transform="scale(2.1)"/><g transform="scale(0.5)">'+badgeSVG()+'</g>';
+  return '<svg class="brand" viewBox="0 -40 760 230" role="img" aria-label="Bee2Boss"'+(animate?' tabindex="0"':'')+'><title>Bee2Boss</title>'
+   +(animate?'<defs><mask id="b2b-trail" maskUnits="userSpaceOnUse" x="0" y="-40" width="760" height="230"><path d="'+BEE_PATH+'" fill="none" stroke="#FFFFFF" stroke-width="16" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"><animate attributeName="stroke-dashoffset" values="1;1;0" keyTimes="0;0.15;1" '+T+'/></path></mask></defs>':'')
+   +'<g transform="translate(48 102)">'+badgeSVG()+'</g>'
+   +'<text x="112" y="136" textLength="316" lengthAdjust="spacingAndGlyphs"><tspan class="lg-muted" font-weight="500">Bee</tspan><tspan class="lg-honey" font-weight="700">2</tspan><tspan class="lg-ink" font-weight="700">Boss</tspan></text>'
+   +'<circle class="lg-muted" cx="446" cy="130" r="5"/>'
+   +'<path class="lg-trail" d="'+BEE_PATH+'" fill="none" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"'+(animate?' mask="url(#b2b-trail)"':'')+'/>'
+   +'<g transform="translate(708 26)">'
+   +(animate?'<g opacity="0"><animate attributeName="opacity" values="0;1;0" keyTimes="0;0.3;1" dur="0.9s" begin="2.4s" fill="freeze"/><animateTransform attributeName="transform" type="scale" values="0.4;1.6" dur="0.9s" begin="2.4s" fill="freeze"/><path class="lg-ray" d="M0 -38 L0 -50 M0 38 L0 50 M-38 0 L-50 0 M38 0 L50 0 M27 -27 L36 -36 M-27 -27 L-36 -36 M27 27 L36 36 M-27 27 L-36 36" stroke-width="3" stroke-linecap="round"/></g>'
+      +'<g transform="scale(0)"><animateTransform attributeName="transform" type="scale" values="0;1.35;1" keyTimes="0;0.6;1" dur="0.5s" begin="2.4s" fill="freeze"/>'+star+'</g>'
+     :'<g>'+star+'</g>')
+   +'</g>'
+   +(animate?'<g><animateMotion path="'+BEE_PATH+'" keyPoints="0;0;1" keyTimes="0;0.15;1" calcMode="linear" '+T+' rotate="auto"/><animate attributeName="opacity" values="1;0" dur="0.15s" begin="2.4s" fill="freeze"/>'+flyBee()+'</g>':'')
+   +'</svg>';
+}
+const calm=()=>{ try{ return matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } };
+function drawLogo(keepFocus){ const still=calm(); $("brand").innerHTML=logoSVG(!still); const svg=$("brand").firstChild; if(!still){ const replay=()=>drawLogo(document.activeElement===svg); svg.setAttribute("role","button"); svg.setAttribute("aria-label","Bee2Boss logo. Play the flight again"); svg.addEventListener("click",replay); svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); replay(); } }); if(keepFocus) svg.focus(); } }
+try{ matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change",()=>drawLogo()); }catch(e){}
+function isDark(){ const t=document.documentElement.dataset.theme; if(t) return t==="dark"; try{ return matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; } }
+function paintTheme(){ const d=isDark(); const b=$("btn-theme"); b.textContent=d?"Light":"Dark"; b.setAttribute("aria-label",d?"Switch to light theme":"Switch to dark theme"); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=d?"#2B303B":"#F3EBDA"; }
+$("btn-theme").onclick=()=>{ const t=isDark()?"light":"dark"; document.documentElement.dataset.theme=t; try{ localStorage.setItem("bee2boss-theme",t); }catch(e){} paintTheme(); };
+try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme); }catch(e){}
+drawLogo(); paintTheme();
 if(S.started) begin(S.step); else showWelcome();
 window.__planner={w2,consult,solveRevenue,rateFor,runway,billHours,get S(){return S;},set S(v){S=v;}};
 </script>
